@@ -17,19 +17,9 @@ export function useSonioxWebSocket() {
     const stopListening = useCallback(() => {
         setIsListening(false)
 
-        // Stop recorder safely and remove handlers so late events don't interfere
-        if (mediaRecorderRef.current) {
-            try {
-                mediaRecorderRef.current.ondataavailable = null
-                mediaRecorderRef.current.onstop = null
-                if (mediaRecorderRef.current.state !== 'inactive') {
-                    mediaRecorderRef.current.stop()
-                }
-            } catch (e) {
-                console.error("Error stopping MediaRecorder", e)
-            } finally {
-                mediaRecorderRef.current = null
-            }
+        // Stop recorder
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop()
         }
 
         // Stop tracks
@@ -44,19 +34,16 @@ export function useSonioxWebSocket() {
             audioContextRef.current = null
         }
 
-        // Close WebSocket reliably
+        // Close WebSocket
         if (websocketRef.current) {
-            try {
-                if (websocketRef.current.readyState === WebSocket.OPEN) {
+            // Send empty frame to indicate end of stream as per docs
+            if (websocketRef.current.readyState === WebSocket.OPEN) {
+                try {
                     websocketRef.current.send(new Uint8Array(0))
+                } catch (e) {
+                    console.error("Error sending closing frame", e)
                 }
-            } catch (e) {
-                console.error("Error sending closing frame", e)
-            }
-            try {
                 websocketRef.current.close()
-            } catch (e) {
-                console.error("Error closing WebSocket", e)
             }
             websocketRef.current = null
         }
@@ -71,39 +58,11 @@ export function useSonioxWebSocket() {
                 throw new Error("Soniox API Key is missing")
             }
 
-            // If any leftover state exists, stop it and wait briefly for cleanup
-            if (websocketRef.current || mediaRecorderRef.current || audioContextRef.current || streamRef.current) {
-                stopListening()
-                await new Promise<void>((resolve) => {
-                    const start = Date.now()
-                    const check = () => {
-                        if (!websocketRef.current && !mediaRecorderRef.current && !audioContextRef.current && !streamRef.current) return resolve()
-                        if (Date.now() - start > 1000) return resolve()
-                        setTimeout(check, 50)
-                    }
-                    check()
-                })
-            }
-
             // Initialize WebSocket
             const ws = new WebSocket('wss://stt-rt.soniox.com/transcribe-websocket')
-            // Prefer arraybuffer for binary frames
-            try { ws.binaryType = 'arraybuffer' } catch(e) {}
             websocketRef.current = ws
 
-            // Safety: fail fast if onopen doesn't happen within 5s
-            let opened = false
-            const openTimer = setTimeout(() => {
-                if (!opened) {
-                    console.warn("WebSocket open timed out")
-                    setError("Connection timed out")
-                    try { ws.close() } catch (e) {}
-                }
-            }, 5000)
-
             ws.onopen = () => {
-                opened = true
-                clearTimeout(openTimer)
                 console.log("Connected to Soniox")
 
                 // Send Configuration
@@ -160,14 +119,9 @@ export function useSonioxWebSocket() {
                 stopListening()
             }
 
-            ws.onclose = (event) => {
-                try { clearTimeout(openTimer) } catch(e){}
-                console.log("Soniox connection closed", event)
+            ws.onclose = () => {
+                console.log("Soniox connection closed")
                 setIsListening(false)
-                websocketRef.current = null
-                if (!opened) {
-                    setError("Connection closed before it was established")
-                }
             }
 
             // Setup Audio
