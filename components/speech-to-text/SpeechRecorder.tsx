@@ -58,7 +58,8 @@ export function SpeechRecorder() {
 
   const transcript = finalTokens.map((t) => t.text).join("");
   const interimTranscript = nonFinalTokens.map((t) => t.text).join("");
-  const isListening = !["Init", "RequestingMedia", "OpeningWebSocket", "Running", "FinishingProcessing", "Finished", "Error", "Canceled"].includes(
+  console.log("Current state:", state);
+  const isListening = [ "RequestingMedia", "OpeningWebSocket", "Running", "FinishingProcessing",].includes(
     state,
   );
 
@@ -85,7 +86,7 @@ export function SpeechRecorder() {
 
   const handleStart = async () => {
     try {
-        setState("Init");
+        setState("Running");
       await startTranscription();
     } catch (e) {
       console.error("Failed to start transcription", e);

@@ -46,6 +46,7 @@ export default function useSonioxClient({
   const [error, setError] = useState<TranscriptionError | null>(null);
 
   const startTranscription = useCallback(async () => {
+    setState('Running')
     setFinalTokens([]);
     setNonFinalTokens([]);
     setError(null);
@@ -69,6 +70,7 @@ export default function useSonioxClient({
         message: string,
         errorCode: number | undefined,
       ) => {
+        setState("Error");
         setError({ status, message, errorCode });
       },
       onStateChange: ({ newState }: { newState: RecorderState }) => {
@@ -105,10 +107,13 @@ export default function useSonioxClient({
   }, [onFinished, onStarted, translationConfig, ensureClient, language]);
 
   const stopTranscription = useCallback(() => {
+    setState("FinishingProcessing");
     sonioxClient.current?.stop();
+    setState("Finished");
   }, []);
 
   const reset = useCallback(() => {
+    setState("Init");
     setFinalTokens([]);
     setNonFinalTokens([]);
     setError(null);
@@ -116,6 +121,7 @@ export default function useSonioxClient({
 
   useEffect(() => {
     return () => {
+      setState("Canceled");
       sonioxClient.current?.cancel();
     };
   }, []);
