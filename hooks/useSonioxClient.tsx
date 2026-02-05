@@ -125,6 +125,7 @@ export default function useSonioxClient({
     stopTranscription,
     reset,
     state,
+    setState,
     finalTokens,
     nonFinalTokens,
     error,

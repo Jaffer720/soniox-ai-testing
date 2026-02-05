@@ -44,6 +44,7 @@ export function SpeechRecorder() {
   // Soniox SDK Hook
   const {
     state,
+    setState,
     finalTokens,
     nonFinalTokens,
     error,
@@ -57,7 +58,7 @@ export function SpeechRecorder() {
 
   const transcript = finalTokens.map((t) => t.text).join("");
   const interimTranscript = nonFinalTokens.map((t) => t.text).join("");
-  const isListening = ["Recording", "Started", "Streaming", "Active"].includes(
+  const isListening = ["Init", "RequestingMedia", "OpeningWebSocket", "Running", "FinishingProcessing", "Finished", "Error", "Canceled"].includes(
     state,
   );
 
@@ -84,6 +85,7 @@ export function SpeechRecorder() {
 
   const handleStart = async () => {
     try {
+        setState("Init");
       await startTranscription();
     } catch (e) {
       console.error("Failed to start transcription", e);
