@@ -75,13 +75,13 @@ export default function useSonioxClient({
         setError({ status, message, errorCode });
       },
 
-      onStateChange: ({ newState }) => {
+      onStateChange: ({ newState }: { newState: RecorderState }) => {
         setState(newState);
       },
 
       // When we receive some tokens back, sort them based on their status --
       // is it final or non-final token.
-      onPartialResult(result) {
+      onPartialResult({result}: { result: { tokens: Token[] } }) {
         const newFinalTokens: Token[] = [];
         const newNonFinalTokens: Token[] = [];
 
