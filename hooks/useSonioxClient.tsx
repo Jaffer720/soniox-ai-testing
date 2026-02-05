@@ -7,7 +7,7 @@ import type {
 } from "@soniox/speech-to-text-web";
 
 interface UseSonioxClientOptions {
-  apiKey: string | undefined;
+  apiKey: string;
   translationConfig?: TranslationConfig;
   onStarted?: () => void;
   onFinished?: () => void;
