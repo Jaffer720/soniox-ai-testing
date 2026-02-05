@@ -58,7 +58,7 @@ export function SpeechRecorder() {
 
   const transcript = finalTokens.map((t) => t.text).join("");
   const interimTranscript = nonFinalTokens.map((t) => t.text).join("");
-  const isListening = ["Init", "RequestingMedia", "OpeningWebSocket", "Running", "FinishingProcessing", "Finished", "Error", "Canceled"].includes(
+  const isListening = !["Init", "RequestingMedia", "OpeningWebSocket", "Running", "FinishingProcessing", "Finished", "Error", "Canceled"].includes(
     state,
   );
 
