@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@soniox/speech-to-text-web':
+        specifier: ^1.4.0
+        version: 1.4.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1156,6 +1159,9 @@ packages:
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
+
+  '@soniox/speech-to-text-web@1.4.0':
+    resolution: {integrity: sha512-ZtwL3yQsPEn7Cf3uYYSa6c4PnD19ohv7/wpZweLfJlNvI5NwoCeQEvENxIMFXGEatG65GvisVkPTl/1MV2WswA==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -3886,6 +3892,8 @@ snapshots:
   '@radix-ui/rect@1.1.1': {}
 
   '@rtsao/scc@1.1.0': {}
+
+  '@soniox/speech-to-text-web@1.4.0': {}
 
   '@swc/helpers@0.5.15':
     dependencies:

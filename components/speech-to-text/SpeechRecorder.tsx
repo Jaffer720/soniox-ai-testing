@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PiMicrophoneFill, PiStopFill, PiCopy, PiTrash, PiTranslate } from "react-icons/pi"
-import { useSonioxWebSocket } from "@/hooks/useSonioxWebSocket"
+import useSonioxClient from '@/hooks/useSonioxClient'
+import getAPIKey from '@/lib/get-api-key'
 import { cn } from "@/lib/utils"
 
 const LANGUAGES = [
@@ -29,16 +30,20 @@ export function SpeechRecorder() {
     const [mounted, setMounted] = useState(false)
     const [selectedLanguage, setSelectedLanguage] = useState('auto')
 
-    // Soniox Hook
+    // Soniox SDK Hook
     const {
-        isListening,
-        transcript,
-        interimTranscript,
+        state,
+        finalTokens,
+        nonFinalTokens,
         error,
-        startListening,
-        stopListening,
-        resetTranscript
-    } = useSonioxWebSocket()
+        startTranscription,
+        stopTranscription,
+    } = useSonioxClient({ apiKey: getAPIKey })
+
+    const transcript = finalTokens.map(t => t.text).join(' ')
+    const interimTranscript = nonFinalTokens.map(t => t.text).join(' ')
+    const isListening = ['Recording', 'Started', 'Streaming', 'Active'].includes(state)
+    const [cleared, setCleared] = useState(false)
 
     const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -61,25 +66,23 @@ export function SpeechRecorder() {
         }
     }
 
-    const handleStart = () => {
-        // Prepare language hints based on selection
-        let language_hints = ['en'] // Default fallback
-
-        if (selectedLanguage !== 'auto') {
-            language_hints = [selectedLanguage]
-        } else {
-            language_hints = ['en', 'es', 'fr', 'de', 'it', 'pt']
+    const handleStart = async () => {
+        try {
+            setCleared(false)
+            await startTranscription()
+        } catch (e) {
+            console.error('Failed to start transcription', e)
         }
+    }
 
-        startListening({
-            api_key: process.env.NEXT_PUBLIC_SONIOX_API_KEY,
-            language_hints: language_hints,
-            context: {
-                general: [
-                    { key: "domain", value: "General" }
-                ]
-            }
-        })
+    const handleClear = () => {
+        try {
+            // Stop any active transcription and clear displayed text
+            stopTranscription()
+        } catch (e) {
+            console.error('Error stopping transcription while clearing', e)
+        }
+        setCleared(true)
     }
 
     if (!mounted) return null
@@ -107,7 +110,7 @@ export function SpeechRecorder() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={resetTranscript}
+                            onClick={handleClear}
                             className="text-muted-foreground hover:text-destructive transition-colors"
                             title="Clear"
                         >
@@ -120,11 +123,11 @@ export function SpeechRecorder() {
                 <div className="flex-1 p-8 pt-24 overflow-y-auto font-medium text-lg leading-relaxed text-foreground">
                     {error && (
                         <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-xl text-sm border border-destructive/20">
-                            Error: {error}
+                            Error: {error.message ? error.message : JSON.stringify(error)}
                         </div>
                     )}
 
-                    {(!transcript && !interimTranscript) ? (
+                    {(!transcript && !interimTranscript) || cleared ? (
                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground animate-pulse">
                             <PiMicrophoneFill className="w-16 h-16 mb-4 opacity-20" />
                             <p className="text-xl font-light">Try it. Speak naturally.</p>
@@ -161,7 +164,7 @@ export function SpeechRecorder() {
                     </div>
 
                     <Button
-                        onClick={isListening ? stopListening : handleStart}
+                        onClick={isListening ? stopTranscription : handleStart}
                         variant={isListening ? "destructive" : "default"}
                         className={cn(
                             "rounded-full px-8 py-6 text-lg font-medium shadow-lg transition-all duration-300 transform active:scale-95 group",
