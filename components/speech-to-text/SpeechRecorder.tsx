@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PiMicrophoneFill, PiStopFill, PiCopy, PiTrash, PiTranslate } from "react-icons/pi"
 import useSonioxClient from '@/hooks/useSonioxClient'
-import getAPIKey from '@/lib/get-api-key'
 import { cn } from "@/lib/utils"
 
 const LANGUAGES = [
@@ -38,7 +37,7 @@ export function SpeechRecorder() {
         error,
         startTranscription,
         stopTranscription,
-    } = useSonioxClient({ apiKey: getAPIKey })
+    } = useSonioxClient({ apiKey: process.env.NEXT_PUBLIC_SONIOX_API_KEY })
 
     const transcript = finalTokens.map(t => t.text).join(' ')
     const interimTranscript = nonFinalTokens.map(t => t.text).join(' ')
