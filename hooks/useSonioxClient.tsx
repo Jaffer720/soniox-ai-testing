@@ -8,6 +8,7 @@ import type {
 
 interface UseSonioxClientOptions {
   apiKey: string;
+  language?: string;
   translationConfig?: TranslationConfig;
   onStarted?: () => void;
   onFinished?: () => void;
@@ -22,6 +23,7 @@ type TranscriptionError = {
 // useTranscribe hook wraps Soniox speech-to-text-web SDK.
 export default function useSonioxClient({
   apiKey,
+  language,
   translationConfig,
   onStarted,
   onFinished,
@@ -54,19 +56,14 @@ export default function useSonioxClient({
       return;
     }
 
-    // First message we send contains configuration. Here we set if we
-    // are transcribing or translating. For translation we also set if it is
-    // one-way or two-way.
-    client.start({
+    const config: any = {
       model: "stt-rt-v3",
-      enableLanguageIdentification: true,
+      languageHints : ["en"], 
       enableSpeakerDiarization: true,
-      enableEndpointDetection: true,
+      enableEndpointDetection: false,
       translation: translationConfig || undefined,
-
       onFinished: onFinished,
       onStarted: onStarted,
-
       onError: (
         status: ErrorStatus,
         message: string,
@@ -74,14 +71,10 @@ export default function useSonioxClient({
       ) => {
         setError({ status, message, errorCode });
       },
-
       onStateChange: ({ newState }: { newState: RecorderState }) => {
         setState(newState);
       },
-
-      // When we receive some tokens back, sort them based on their status --
-      // is it final or non-final token.
-      onPartialResult({result}: { result: { tokens: Token[] } }) {
+      onPartialResult(result: { tokens: Token[] }) {
         const newFinalTokens: Token[] = [];
         const newNonFinalTokens: Token[] = [];
 
@@ -99,11 +92,26 @@ export default function useSonioxClient({
         ]);
         setNonFinalTokens(newNonFinalTokens);
       },
-    });
-  }, [onFinished, onStarted, translationConfig, ensureClient]);
+    };
+
+    if (language && language !== "auto") {
+      config.language = language;
+      config.enableLanguageIdentification = false;
+    } else {
+      config.enableLanguageIdentification = true;
+    }
+
+    client.start(config);
+  }, [onFinished, onStarted, translationConfig, ensureClient, language]);
 
   const stopTranscription = useCallback(() => {
     sonioxClient.current?.stop();
+  }, []);
+
+  const reset = useCallback(() => {
+    setFinalTokens([]);
+    setNonFinalTokens([]);
+    setError(null);
   }, []);
 
   useEffect(() => {
@@ -115,6 +123,7 @@ export default function useSonioxClient({
   return {
     startTranscription,
     stopTranscription,
+    reset,
     state,
     finalTokens,
     nonFinalTokens,

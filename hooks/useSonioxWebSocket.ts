@@ -135,12 +135,12 @@ export function useSonioxWebSocket() {
                         // For simplicity, we assume generic real-time stream handling
 
                         // Filter final vs interim
-                        const finalTokens = response.tokens.filter(t => t.is_final).map(t => t.text).join(' ')
-                        const interimTokens = response.tokens.filter(t => !t.is_final).map(t => t.text).join(' ')
+                        const finalTokens = response.tokens.filter(t => t.is_final).map(t => t.text).join('')
+                        const interimTokens = response.tokens.filter(t => !t.is_final).map(t => t.text).join('')
 
                         setTranscript(prev => {
                             if (finalTokens) {
-                                return prev ? `${prev} ${finalTokens}` : finalTokens
+                                return prev + finalTokens
                             }
                             return prev
                         })

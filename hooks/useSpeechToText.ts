@@ -53,10 +53,7 @@ export function useSpeechToText(options: SpeechToTextOptions = {}) {
                     }
 
                     if (final) {
-                        setTranscript(prev => {
-                            const newTranscript = prev ? `${prev} ${final}` : final
-                            return newTranscript
-                        })
+                        setTranscript(prev => prev + final)
                     }
                     setInterimTranscript(interim)
                 }
